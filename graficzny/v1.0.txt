@@ -1,0 +1,83 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include <random>
+#include <vector>
+#include "windows.h"
+#include "particle.h"
+
+int main()
+{
+    sf::Clock clock;
+    const int width=900;
+    const int height=900;
+    int r=0;
+    int g=0;
+    int b=0;
+    int n=30;  //number of particles
+    int max_vel = 2;
+
+    std::random_device rd;
+    std::mt19937 eng(rd());
+    std::uniform_int_distribution<> distr(0, width);
+    std::uniform_int_distribution<> distr2(-max_vel, max_vel);
+    //std::uniform_int_distribution<> distr_color(0,255);  //jakby to daa do c.setFillColor to wtedy jest losowany kolor dla ka?dej cz1steczki co klatke
+
+    sf::CircleShape c(1);
+
+    std::vector<particle> vec1(n);
+    vec1.shrink_to_fit();
+
+    for(int i=0; i<(int)vec1.size(); i++) //(int)vec1.size() = circles.size() = n
+           vec1[i] = particle(distr(eng),distr(eng),distr2(eng),distr2(eng));
+
+    sf::RenderWindow okno;
+    okno.create(sf::VideoMode(width,height),"Hejka");
+    okno.setFramerateLimit(60);
+
+   while(okno.isOpen())
+   {
+       sf::Event zdarzenie;
+       while(okno.pollEvent(zdarzenie))
+       {
+           if((zdarzenie.type==sf::Event::Closed) || (zdarzenie.type==sf::Event::KeyReleased && zdarzenie.key.code==sf::Keyboard::Escape) || (zdarzenie.type==sf::Event::KeyReleased && zdarzenie.key.code==sf::Keyboard::Enter) || (zdarzenie.type==sf::Event::KeyReleased && zdarzenie.key.code==sf::Keyboard::Enter))
+               okno.close();
+       }
+
+        for(int i=0; i<(int)vec1.size(); i++) //(int)vec1.size() = n
+        {
+            //to jest takie b31dzenie losowe troche bo z ka?d1 klatk1 jest nowy kierunek ustawiany
+
+            //std::uniform_int_distribution<> distr_x(vec1[i].pos_x-1,vec1[i].pos_x+1);
+            //std::uniform_int_distribution<> distr_y(vec1[i].pos_y-1,vec1[i].pos_y+1);
+            //vec1[i].pos_x = distr_x(eng);
+            //vec1[i].pos_y = distr_y(eng);
+
+            vec1[i].pos_x = vec1[i].pos_x + vec1[i].vel_x;
+            vec1[i].pos_y = vec1[i].pos_y + vec1[i].vel_y;
+
+            if(vec1[i].pos_x >= width-max_vel || vec1[i].pos_x <= 1-max_vel)
+                vec1[i].vel_x = -vec1[i].vel_x;
+
+            if(vec1[i].pos_y >= height-max_vel || vec1[i].pos_y <= 1-max_vel)
+                vec1[i].vel_y = -vec1[i].vel_y;
+
+            Sleep(5/n);
+        }
+
+       okno.clear(sf::Color(r,g,b));
+       for(int i=0; i<n; i++)
+       {
+           c.setPosition(vec1[i].pos_x,vec1[i].pos_y);
+           c.setFillColor(sf::Color(247,0,0));
+           okno.draw(c);
+       }
+
+       float fps = 1.f / clock.getElapsedTime().asSeconds();
+       clock.restart();
+       std::cout<<"FPS = "<<fps<<std::endl;
+       okno.display();
+   }
+
+    return 0;
+}
+
